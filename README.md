@@ -11,7 +11,12 @@
 
   > A web-based system for tracking library visitors at NEU. Students can check in and out, while admins can monitor, manage, and generate reports.
 
-  **[🌐 Live Site](https://neulibraryvisitorlog.netlify.app/)** &nbsp;
+  <div align="center">
+  <a href="https://neulibraryvisitorlog.netlify.app/" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #3ECF8E 0%, #2ecc71 100%); color: white; font-size: 20px; font-weight: bold; padding: 15px 40px; text-decoration: none; border-radius: 50px; box-shadow: 0 4px 15px rgba(62,207,142,0.3); transition: all 0.3s ease;">
+    🌐 LIVE SITE 🌐
+  </a>
+</div>
+
 </div>
 
 ---
