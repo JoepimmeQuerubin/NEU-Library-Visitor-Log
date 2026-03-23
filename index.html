@@ -64,7 +64,7 @@
         </div>
         <div class="lp-panel-title">
           <div class="lp-panel-title-main">Welcome to NEU Library</div>
-          <div class="lp-panel-title-sub">Visitor Log</div>
+          <div class="lp-panel-title-sub">Visitor Log System</div>
         </div>
         <div class="lp-gold-line"></div>
         <p class="lp-section-sub" style="margin-bottom:1.6rem;color:var(--parchment-sm)">Choose how you want to access the system</p>
@@ -285,9 +285,13 @@
 
       <div class="sidebar-user" id="sidebar-user">
         <img id="sidebar-avatar" src="" alt="avatar" />
-        <div>
+        <div style="flex:1;min-width:0">
           <div id="sidebar-name" class="sidebar-uname">—</div>
           <div id="sidebar-role" class="sidebar-urole">Student</div>
+          <div id="sidebar-view-chip" class="sidebar-view-chip hidden">
+            <i class="fa-solid fa-circle" style="font-size:0.45rem"></i>
+            <span id="sidebar-view-label">User View</span>
+          </div>
         </div>
       </div>
 
@@ -333,6 +337,10 @@
       </nav>
 
       <div class="sidebar-footer">
+        <button class="btn-switch-role hidden" id="btn-switch-role" onclick="switchRole()">
+          <i class="fa-solid fa-repeat" id="switch-role-icon"></i>
+          <span id="switch-role-label">Switch to Admin</span>
+        </button>
         <button class="btn-logout" onclick="logout()">
           <i class="fa-solid fa-right-from-bracket"></i> Sign Out
         </button>
