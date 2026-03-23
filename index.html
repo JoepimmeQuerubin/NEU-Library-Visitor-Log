@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEU Library — Visitor Log System</title>
+  <link rel="icon" type="image/svg+xml" href="neu-logo.svg" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- SheetJS (xlsx export) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Google Sign-In -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ═══════════════════ TOAST ═══════════════════ -->
+  <div id="toast-container"></div>
+
+  <!-- ═══════════════════ LOADING SCREEN ═══════════════════ -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-inner">
+      <div class="loading-emblem">
+        <i class="fa-solid fa-book-open-reader"></i>
+      </div>
+      <div class="loading-title">NEU Library</div>
+      <div class="loading-sub">New Era University</div>
+      <div class="loading-bar"><div class="loading-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ LOGIN PAGE ═══════════════════ -->
+  <div id="login-page" class="page hidden">
+    <div class="lp-bg"></div>
+
+    <div class="lp-card">
+
+      <!-- SCREEN 1: Role Picker -->
+      <div id="lp-screen-welcome" class="lp-screen">
+        <img src="neu-logo.svg"
+             onerror="this.style.display='none';document.getElementById('lp-fallback-icon').style.display='flex'"
+             class="lp-logo lp-logo-sm" alt="NEU Logo" style="margin-bottom:0.7rem" />
+        <div id="lp-fallback-icon" class="lp-fallback-icon" style="display:none">
+          <i class="fa-solid fa-book-open-reader"></i>
+        </div>
+        <div class="lp-panel-title">
+          <div class="lp-panel-title-main">Welcome to NEU Library</div>
+          <div class="lp-panel-title-sub">Visitor Log</div>
+        </div>
+        <div class="lp-gold-line"></div>
+        <p class="lp-section-sub" style="margin-bottom:1.6rem;color:var(--parchment-sm)">Choose how you want to access the system</p>
+
+        <div class="lp-role-cards">
+          <button class="lp-role-card" onclick="selectRole('user')">
+            <div class="lp-role-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+            <div class="lp-role-text">
+              <div class="lp-role-name">Regular User</div>
+              <div class="lp-role-desc">Access your personal library dashboard</div>
+            </div>
+            <i class="fa-solid fa-arrow-right lp-role-arrow"></i>
+          </button>
+          <button class="lp-role-card" onclick="selectRole('admin')">
+            <div class="lp-role-icon admin"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="lp-role-text">
+              <div class="lp-role-name">Administrator</div>
+              <div class="lp-role-desc">Access visitor statistics and management</div>
+            </div>
+            <i class="fa-solid fa-arrow-right lp-role-arrow"></i>
+          </button>
+        </div>
+
+        <p class="lp-hint"><i class="fa-solid fa-circle-info"></i> Use your <strong>@neu.edu.ph</strong> account</p>
+      </div>
+
+      <!-- SCREEN 2: Sign-in methods -->
+      <div id="lp-screen-signin" class="lp-screen hidden">
+        <img src="neu-logo.svg"
+             onerror="this.style.display='none'" class="lp-logo lp-logo-sm" alt="NEU Logo" />
+        <div class="lp-role-badge" id="lp-role-badge">
+          <i class="fa-solid fa-graduation-cap"></i> <span id="lp-role-label">Regular User</span>
+        </div>
+        <h2 class="lp-section-title">Sign In</h2>
+        <p class="lp-section-sub">Choose how you want to sign in</p>
+
+        <div id="g_id_onload"
+          data-client_id="871407354989-hlc07tpr6ei3k5p2hqpsk74b9n2gdva6.apps.googleusercontent.com"
+          data-callback="handleGoogleSignIn"
+          data-auto_prompt="false">
+        </div>
+        <div class="lp-google-wrap">
+          <div class="g_id_signin"
+            data-type="standard"
+            data-size="large"
+            data-theme="filled_black"
+            data-text="continue_with"
+            data-shape="pill"
+            data-width="300"
+            data-logo_alignment="left">
+          </div>
+        </div>
+
+        <div class="lp-or"><span>or</span></div>
+
+        <button class="lp-btn-outline" onclick="showLoginScreen('manual')">
+          <i class="fa-solid fa-envelope"></i> Sign in with Email
+        </button>
+
+        <button class="lp-btn-back" onclick="showLoginScreen('welcome')">
+          &#8592; Back
+        </button>
+      </div>
+
+      <!-- SCREEN 3: Manual Login (email only) -->
+      <div id="lp-screen-manual" class="lp-screen hidden">
+        <img src="neu-logo.svg"
+             onerror="this.style.display='none'" class="lp-logo lp-logo-sm" alt="NEU Logo" />
+        <div class="lp-role-badge" id="lp-role-badge-2">
+          <i class="fa-solid fa-graduation-cap"></i> <span id="lp-role-label-2">Regular User</span>
+        </div>
+        <h2 class="lp-section-title">Sign In</h2>
+        <p class="lp-section-sub">Enter your NEU email to continue</p>
+
+        <div class="form-group lp-field">
+          <label>Email Address</label>
+          <input type="email" id="ml-email" placeholder="you@neu.edu.ph"
+                 onkeydown="if(event.key==='Enter') manualLogin()" />
+        </div>
+
+        <button class="lp-btn-primary" onclick="manualLogin()">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i> Continue
+        </button>
+        <button class="lp-btn-ghost" onclick="showLoginScreen('register')">
+          New here? <strong>Create an account</strong>
+        </button>
+        <button class="lp-btn-back" onclick="showLoginScreen('signin')">
+          &#8592; Back
+        </button>
+      </div>
+
+      <!-- SCREEN 4: Register -->
+      <div id="lp-screen-register" class="lp-screen hidden">
+        <img src="neu-logo.svg"
+             onerror="this.style.display='none'" class="lp-logo lp-logo-sm" alt="NEU Logo" />
+        <h2 class="lp-section-title">Create Account</h2>
+        <p class="lp-section-sub">Register your NEU library profile</p>
+
+        <div class="form-group lp-field">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" placeholder="e.g. Juan dela Cruz" />
+        </div>
+        <div class="form-group lp-field">
+          <label>Email <span style="color:var(--gold-muted);font-size:0.8rem">(@neu.edu.ph only)</span></label>
+          <input type="email" id="reg-email" placeholder="you@neu.edu.ph" />
+        </div>
+        <div class="form-group lp-field">
+          <label>Student / Employee ID</label>
+          <input type="text" id="reg-student-id" placeholder="e.g. 2024-00001" />
+        </div>
+        <div class="form-group lp-field">
+          <label>College / Department</label>
+          <select id="reg-college">
+            <option value="">— Select College —</option>
+            <option value="CICS">CICS · Computer Studies</option>
+            <option value="CEBA">CEBA · Business</option>
+            <option value="CED">CED · Education</option>
+            <option value="CEA">CEA · Engineering</option>
+            <option value="CHS">CHS · Health Sciences</option>
+            <option value="CLA">CLA · Liberal Arts</option>
+            <option value="Administration">Administration</option>
+            <option value="Library Staff">Library Staff</option>
+          </select>
+        </div>
+        <div class="form-group checkbox-group lp-field">
+          <label class="checkbox-label">
+            <input type="checkbox" id="reg-employee" />
+            <span class="checkmark"></span>
+            I am a Teacher / Staff Member
+          </label>
+        </div>
+
+        <button class="lp-btn-primary" onclick="registerManual()">
+          <i class="fa-solid fa-user-plus"></i> Create Account
+        </button>
+        <button class="lp-btn-back" onclick="showLoginScreen('manual')">
+          &#8592; Back to Sign In
+        </button>
+      </div>
+
+      <!-- SCREEN 5: Post-login role confirm (admin only after Google login) -->
+      <div id="lp-screen-role" class="lp-screen hidden">
+        <img src="neu-logo.svg"
+             onerror="this.style.display='none'" class="lp-logo lp-logo-sm" alt="NEU Logo" />
+        <h2 class="lp-section-title">Welcome back!</h2>
+        <div class="lp-gold-line"></div>
+        <p class="lp-section-sub">Choose how you want to access the system</p>
+
+        <div class="lp-role-cards">
+          <button class="lp-role-card" onclick="enterAsRole('user')">
+            <div class="lp-role-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+            <div class="lp-role-text">
+              <div class="lp-role-name">Regular User</div>
+              <div class="lp-role-desc">Access your personal library dashboard</div>
+            </div>
+            <i class="fa-solid fa-arrow-right lp-role-arrow"></i>
+          </button>
+          <button class="lp-role-card" onclick="enterAsRole('admin')">
+            <div class="lp-role-icon admin"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="lp-role-text">
+              <div class="lp-role-name">Administrator</div>
+              <div class="lp-role-desc">Access visitor statistics and management</div>
+            </div>
+            <i class="fa-solid fa-arrow-right lp-role-arrow"></i>
+          </button>
+        </div>
+
+        <button class="lp-btn-back" onclick="logout()">&#8592; Back to Sign In</button>
+      </div>
+
+    </div><!-- /lp-card -->
+    <div class="lp-footer">© 2025 New Era University Library &nbsp;·&nbsp; All Rights Reserved</div>
+  </div>
+
+  <!-- signup handled inside login card -->
+
+  <!-- ═══════════════════ WELCOME OVERLAY ═══════════════════ -->
+  <div id="welcome-overlay" class="overlay hidden">
+    <div class="welcome-box">
+      <div class="welcome-icon"><i class="fa-solid fa-sun"></i></div>
+      <div class="welcome-greeting" id="welcome-greeting">Good Morning</div>
+      <div class="welcome-name" id="welcome-name">Juan dela Cruz</div>
+      <div class="welcome-sub">Welcome back to NEU Library</div>
+      <div class="welcome-time" id="welcome-time"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ CHECK-IN SUCCESS OVERLAY ═══════════════════ -->
+  <div id="checkin-overlay" class="overlay hidden">
+    <div class="checkin-box">
+      <div class="checkin-icon"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="checkin-title">Checked In!</div>
+      <div class="checkin-name" id="checkin-name">Juan dela Cruz</div>
+      <div class="checkin-detail" id="checkin-reason">Studying</div>
+      <div class="checkin-time" id="checkin-time-display"></div>
+      <div class="checkin-bar"><div class="checkin-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ MAIN APP ═══════════════════ -->
+  <div id="app" class="hidden">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <img src="neu-logo.svg"
+               onerror="this.src='';this.style.display='none';document.getElementById('sb-fallback').style.display='flex'"
+               class="sidebar-neu-logo" alt="NEU" />
+          <div id="sb-fallback" class="sidebar-neu-fallback" style="display:none">
+            <i class="fa-solid fa-book-open-reader"></i>
+          </div>
+          <div>
+            <div class="sidebar-title">NEU Library</div>
+            <div class="sidebar-sub">Visitor System</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-user" id="sidebar-user">
+        <img id="sidebar-avatar" src="" alt="avatar" />
+        <div>
+          <div id="sidebar-name" class="sidebar-uname">—</div>
+          <div id="sidebar-role" class="sidebar-urole">Student</div>
+        </div>
+      </div>
+
+      <!-- User Nav -->
+      <nav class="sidebar-nav" id="user-nav">
+        <div class="nav-section-label">My Library</div>
+        <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+          <i class="fa-solid fa-gauge-high"></i> Dashboard
+        </a>
+        <a class="nav-item" data-page="checkin" onclick="navigate('checkin')">
+          <i class="fa-solid fa-right-to-bracket"></i> Check In
+        </a>
+        <a class="nav-item" data-page="history" onclick="navigate('history')">
+          <i class="fa-solid fa-clock-rotate-left"></i> My History
+        </a>
+      </nav>
+
+      <!-- Admin Nav -->
+      <nav class="sidebar-nav hidden" id="admin-nav">
+        <div class="nav-section-label">Administration</div>
+        <a class="nav-item" data-page="admin-overview" onclick="navigate('admin-overview')">
+          <i class="fa-solid fa-chart-pie"></i> Overview
+        </a>
+        <a class="nav-item" data-page="admin-monitor" onclick="navigate('admin-monitor')">
+          <i class="fa-solid fa-tower-broadcast"></i> Live Monitor
+          <span class="nav-badge" id="active-count-badge">0</span>
+        </a>
+        <a class="nav-item" data-page="admin-visitors" onclick="navigate('admin-visitors')">
+          <i class="fa-solid fa-users"></i> All Visitors
+        </a>
+        <a class="nav-item" data-page="admin-users" onclick="navigate('admin-users')">
+          <i class="fa-solid fa-user-gear"></i> Manage Users
+        </a>
+        <a class="nav-item" data-page="admin-stats" onclick="navigate('admin-stats')">
+          <i class="fa-solid fa-chart-line"></i> Statistics
+        </a>
+        <a class="nav-item" data-page="admin-logs" onclick="navigate('admin-logs')">
+          <i class="fa-solid fa-file-lines"></i> Activity Logs
+        </a>
+        <a class="nav-item" data-page="admin-reports" onclick="navigate('admin-reports')">
+          <i class="fa-solid fa-file-export"></i> Reports
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn-logout" onclick="logout()">
+          <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <div class="topbar">
+        <button class="topbar-menu" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-right">
+          <div class="topbar-time" id="topbar-clock"></div>
+        </div>
+      </div>
+
+      <!-- ── USER DASHBOARD ── -->
+      <section id="page-dashboard" class="page-section">
+        <div class="page-hero">
+          <div>
+            <h2 class="page-heading" id="dash-greeting">Good Morning, Scholar</h2>
+            <p class="page-lead">Your library activity at a glance.</p>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-right-to-bracket"></i></div>
+            <div class="stat-body">
+              <div class="stat-value" id="stat-total-visits">0</div>
+              <div class="stat-label">Total Visits</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+            <div class="stat-body">
+              <div class="stat-value" id="stat-hours">0h</div>
+              <div class="stat-label">Hours Logged</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
+            <div class="stat-body">
+              <div class="stat-value" id="stat-streak">0</div>
+              <div class="stat-label">Day Streak</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-trophy"></i></div>
+            <div class="stat-body">
+              <div class="stat-value" id="stat-rank">#—</div>
+              <div class="stat-label">Library Rank</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="active-visit-banner hidden" id="active-visit-banner">
+          <i class="fa-solid fa-circle-dot pulse-dot"></i>
+          <div>
+            <strong>Active Visit</strong>
+            <span id="active-visit-info">You checked in at —</span>
+          </div>
+          <button class="btn-checkout" onclick="checkOut()">
+            <i class="fa-solid fa-right-from-bracket"></i> Check Out
+          </button>
+        </div>
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Visits</h3>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr>
+                <th>Date</th><th>Time In</th><th>Time Out</th><th>Reason</th><th>College</th><th>Duration</th>
+              </tr></thead>
+              <tbody id="recent-visits-body">
+                <tr><td colspan="6" class="empty-row">No visits yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── CHECK IN ── -->
+      <section id="page-checkin" class="page-section hidden">
+        <div class="page-hero">
+          <div>
+            <h2 class="page-heading">Library Check-In</h2>
+            <p class="page-lead">Log your visit to the NEU Library.</p>
+          </div>
+        </div>
+        <div class="checkin-form-card">
+          <div class="checkin-form-header">
+            <img id="checkin-avatar" src="" alt="avatar" class="checkin-avatar" />
+            <div>
+              <div class="checkin-form-name" id="checkin-form-name">—</div>
+              <div class="checkin-form-id" id="checkin-form-id">—</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label><i class="fa-solid fa-circle-question"></i> Reason for Visit</label>
+              <select id="ci-reason">
+                <option value="">— Select Reason —</option>
+                <option>Studying</option>
+                <option>Reading Books</option>
+                <option>Using Computers</option>
+                <option>Research</option>
+                <option>Borrowing Books</option>
+                <option>Returning Books</option>
+                <option>Printing/Scanning</option>
+                <option>Group Discussion</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label><i class="fa-solid fa-building-columns"></i> College / Department</label>
+              <select id="ci-college">
+                <option value="">— Select College —</option>
+                <option>CICS</option><option>CEBA</option><option>CED</option>
+                <option>CEA</option><option>CHS</option><option>CLA</option>
+                <option>Administration</option><option>Library Staff</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="ci-employee" />
+              <span class="checkmark"></span>
+              I am a Teacher / Staff Member
+            </label>
+          </div>
+          <button class="btn-primary btn-full" onclick="checkIn()">
+            <i class="fa-solid fa-right-to-bracket"></i> Check In to Library
+          </button>
+        </div>
+      </section>
+
+      <!-- ── HISTORY ── -->
+      <section id="page-history" class="page-section hidden">
+        <div class="page-hero">
+          <div>
+            <h2 class="page-heading">My Visit History</h2>
+            <p class="page-lead">All your recorded library visits.</p>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header">
+            <h3><i class="fa-solid fa-list"></i> All Visits</h3>
+            <input class="search-input" type="text" id="history-search" placeholder="Search visits…" oninput="filterHistory()" />
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr>
+                <th>Date</th><th>Time In</th><th>Time Out</th><th>Reason</th><th>College</th><th>Duration</th><th>Action</th>
+              </tr></thead>
+              <tbody id="history-body">
+                <tr><td colspan="7" class="empty-row">No visits yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ADMIN OVERVIEW ── -->
+      <section id="page-admin-overview" class="page-section hidden">
+        <div class="page-hero">
+          <div>
+            <h2 class="page-heading">Admin Overview</h2>
+            <p class="page-lead">Library activity summary for today.</p>
+          </div>
+        </div>
+        <div class="stats-grid stats-grid-wide">
+          <div class="stat-card accent">
+            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-body">
+              <div class="stat-value" id="adm-total-visits">0</div>
+              <div class="stat-label">Total Visits Today</div>
+            </div>
+          </div>
+          <div class="stat-card accent green">
+            <div class="stat-icon"><i class="fa-solid fa-circle-dot"></i></div>
+            <div class="stat-body">
+              <div class="stat-value" id="adm-active">0</div>
+              <div class="stat-label">Currently Inside</div>
+            </div>
+          </div>
+          <div class="stat-card accent">
+            <div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+            <div class="stat-body">
+              <div class="stat-value" id="adm-hours">0h</div>
+              <div class="stat-label">Hours Logged Today</div>
+            </div>
+          </div>
+          <div class="stat-card accent">
+            <div class="stat-icon"><i class="fa-solid fa-user-check"></i></div>
+            <div class="stat-body">
+              <div class="stat-value" id="adm-unique">0</div>
+              <div class="stat-label">Unique Visitors</div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-grid">
+          <div class="section-card">
+            <div class="section-card-header"><h3>Visits by Reason</h3></div>
+            <canvas id="chart-reason" height="250"></canvas>
+          </div>
+          <div class="section-card">
+            <div class="section-card-header"><h3>Visits by College</h3></div>
+            <canvas id="chart-college" height="250"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ADMIN LIVE MONITOR ── -->
+      <section id="page-admin-monitor" class="page-section hidden">
+        <div class="page-hero">
+          <div>
+            <h2 class="page-heading">Live Monitor</h2>
+            <p class="page-lead">Visitors currently inside the library.</p>
+          </div>
+          <button class="btn-secondary" onclick="loadMonitor()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        </div>
+        <div class="section-card">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr>
+                <th>Name</th><th>ID</th><th>College</th><th>Reason</th><th>Time In</th><th>Duration</th><th>Actions</th>
+              </tr></thead>
+              <tbody id="monitor-body">
+                <tr><td colspan="7" class="empty-row">No active visitors.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ADMIN ALL VISITORS ── -->
+      <section id="page-admin-visitors" class="page-section hidden">
+        <div class="page-hero">
+          <div>
+            <h2 class="page-heading">All Visitor Logs</h2>
+            <p class="page-lead">Complete history of library visits.</p>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header">
+            <h3><i class="fa-solid fa-table-list"></i> Visitor Logs</h3>
+            <div class="header-actions">
+              <div class="search-wrap">
+                <input class="search-input" type="text" id="visitors-search"
+                       placeholder="Search by name, email, college, reason…"
+                       oninput="onVisitorSearchInput()" autocomplete="off" />
+                <div class="search-dropdown hidden" id="visitors-suggestions"></div>
+              </div>
+              <select id="visitors-sort" onchange="filterVisitors()">
+                <option value="date-desc">Newest First</option>
+                <option value="date-asc">Oldest First</option>
+                <option value="name-asc">Name A–Z</option>
+              </select>
+            </div>
+          </div>
+          <!-- Date filter strip -->
+          <div class="date-filter-strip">
+            <span class="date-filter-label"><i class="fa-solid fa-calendar-days"></i> Filter:</span>
+            <button class="df-btn active" id="df-all"   onclick="setDateFilter('all')">All Time</button>
+            <button class="df-btn"        id="df-today" onclick="setDateFilter('today')">Today</button>
+            <button class="df-btn"        id="df-week"  onclick="setDateFilter('week')">This Week</button>
+            <button class="df-btn"        id="df-month" onclick="setDateFilter('month')">This Month</button>
+            <div class="df-custom">
+              <input type="date" id="df-from" onchange="setDateFilter('custom')" />
+              <span style="color:var(--text-muted)">—</span>
+              <input type="date" id="df-to"   onchange="setDateFilter('custom')" />
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr>
+                <th>Date</th><th>Name</th><th>ID</th><th>College</th><th>Reason</th><th>Time In</th><th>Time Out</th><th>Duration</th>
+              </tr></thead>
+              <tbody id="visitors-body">
+                <tr><td colspan="8" class="empty-row">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ADMIN MANAGE USERS ── -->
+      <section id="page-admin-users" class="page-section hidden">
+        <div class="page-hero">
+          <div>
+            <h2 class="page-heading">User Management</h2>
+            <p class="page-lead">Manage registered library users.</p>
+          </div>
+          <button class="btn-primary" onclick="openAddUserModal()"><i class="fa-solid fa-user-plus"></i> Add User</button>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header">
+            <h3><i class="fa-solid fa-users-gear"></i> All Users</h3>
+            <input class="search-input" type="text" id="users-search" placeholder="Search users…" oninput="filterUsers()" />
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr>
+                <th>Name</th><th>Email</th><th>ID</th><th>College</th><th>Role</th><th>Status</th><th>Registered</th><th>Actions</th>
+              </tr></thead>
+              <tbody id="users-body">
+                <tr><td colspan="8" class="empty-row">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ADMIN STATISTICS ── -->
+      <section id="page-admin-stats" class="page-section hidden">
+        <div class="page-hero">
+          <div>
+            <h2 class="page-heading">Statistics</h2>
+            <p class="page-lead">In-depth analytics of library usage.</p>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="stats-filter-bar section-card">
+          <!-- Period -->
+          <div class="sf-group">
+            <div class="sf-label"><i class="fa-solid fa-calendar-days"></i> Period</div>
+            <div class="sf-chips">
+              <button class="sf-chip active" id="sf-today"  onclick="setSFPeriod('today')">Today</button>
+              <button class="sf-chip"        id="sf-week"   onclick="setSFPeriod('week')">This Week</button>
+              <button class="sf-chip"        id="sf-month"  onclick="setSFPeriod('month')">This Month</button>
+              <button class="sf-chip"        id="sf-custom" onclick="setSFPeriod('custom')">Custom</button>
+            </div>
+            <div class="sf-custom-range hidden" id="sf-custom-range">
+              <input type="date" id="sf-from" onchange="applyStatsFilters()" />
+              <span>—</span>
+              <input type="date" id="sf-to"   onchange="applyStatsFilters()" />
+            </div>
+          </div>
+          <!-- Reason -->
+          <div class="sf-group">
+            <div class="sf-label"><i class="fa-solid fa-circle-question"></i> Reason</div>
+            <select id="sf-reason" onchange="applyStatsFilters()">
+              <option value="">All Reasons</option>
+              <option>Studying</option>
+              <option>Reading Books</option>
+              <option>Using Computers</option>
+              <option>Research</option>
+              <option>Borrowing Books</option>
+              <option>Returning Books</option>
+              <option>Printing/Scanning</option>
+              <option>Group Discussion</option>
+            </select>
+          </div>
+          <!-- College -->
+          <div class="sf-group">
+            <div class="sf-label"><i class="fa-solid fa-building-columns"></i> College</div>
+            <select id="sf-college" onchange="applyStatsFilters()">
+              <option value="">All Colleges</option>
+              <option value="CICS">CICS</option>
+              <option value="CEBA">CEBA</option>
+              <option value="CED">CED</option>
+              <option value="CEA">CEA</option>
+              <option value="CHS">CHS</option>
+              <option value="CLA">CLA</option>
+              <option value="Administration">Administration</option>
+              <option value="Library Staff">Library Staff</option>
+            </select>
+          </div>
+          <!-- Type -->
+          <div class="sf-group">
+            <div class="sf-label"><i class="fa-solid fa-users"></i> Type</div>
+            <select id="sf-type" onchange="applyStatsFilters()">
+              <option value="">All Types</option>
+              <option value="Student">Student</option>
+              <option value="Employee">Teacher / Staff</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stats-grid stats-grid-wide" style="margin-bottom:1.5rem">
+          <div class="stat-card accent">
+            <div class="stat-icon"><i class="fa-solid fa-right-to-bracket"></i></div>
+            <div class="stat-body">
+              <div class="stat-value" id="sf-stat-total">0</div>
+              <div class="stat-label">Total Visits</div>
+            </div>
+          </div>
+          <div class="stat-card accent">
+            <div class="stat-icon"><i class="fa-solid fa-user-check"></i></div>
+            <div class="stat-body">
+              <div class="stat-value" id="sf-stat-unique">0</div>
+              <div class="stat-label">Unique Visitors</div>
+            </div>
+          </div>
+          <div class="stat-card accent green">
+            <div class="stat-icon"><i class="fa-solid fa-circle-dot"></i></div>
+            <div class="stat-body">
+              <div class="stat-value" id="sf-stat-active">0</div>
+              <div class="stat-label">Currently Inside</div>
+            </div>
+          </div>
+          <div class="stat-card accent">
+            <div class="stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
+            <div class="stat-body">
+              <div class="stat-value" id="sf-stat-today">0</div>
+              <div class="stat-label">Today's Total</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="chart-grid chart-grid-full">
+          <div class="section-card span-full">
+            <div class="section-card-header"><h3>Daily Visitor Trend</h3></div>
+            <canvas id="chart-daily" height="140"></canvas>
+          </div>
+          <div class="section-card">
+            <div class="section-card-header"><h3>Visits by Reason</h3></div>
+            <canvas id="chart-reason-stats" height="250"></canvas>
+          </div>
+          <div class="section-card">
+            <div class="section-card-header"><h3>Visits by College</h3></div>
+            <canvas id="chart-college-stats" height="250"></canvas>
+          </div>
+          <div class="section-card">
+            <div class="section-card-header"><h3>Peak Hours</h3></div>
+            <canvas id="chart-hours" height="250"></canvas>
+          </div>
+          <div class="section-card">
+            <div class="section-card-header"><h3>Student vs. Employee</h3></div>
+            <canvas id="chart-type" height="250"></canvas>
+          </div>
+        </div>
+
+        <!-- Filtered Table -->
+        <div class="section-card">
+          <div class="section-card-header">
+            <h3><i class="fa-solid fa-table-list"></i> Filtered Records</h3>
+            <span class="sf-count" id="sf-count">0 records</span>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr>
+                <th>Date</th><th>Name</th><th>College</th><th>Reason</th><th>Type</th><th>Time In</th><th>Time Out</th><th>Duration</th>
+              </tr></thead>
+              <tbody id="stats-table-body">
+                <tr><td colspan="8" class="empty-row">Apply filters to view records.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ADMIN ACTIVITY LOGS ── -->
+      <section id="page-admin-logs" class="page-section hidden">
+        <div class="page-hero">
+          <div>
+            <h2 class="page-heading">Activity Logs</h2>
+            <p class="page-lead">System event audit trail.</p>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header">
+            <h3><i class="fa-solid fa-file-lines"></i> All Events</h3>
+            <input class="search-input" type="text" id="logs-search" placeholder="Search logs…" oninput="filterLogs()" />
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr>
+                <th>Timestamp</th><th>Performed By</th><th>Action</th><th>Detail</th>
+              </tr></thead>
+              <tbody id="logs-body">
+                <tr><td colspan="4" class="empty-row">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ADMIN REPORTS ── -->
+      <section id="page-admin-reports" class="page-section hidden">
+        <div class="page-hero">
+          <div>
+            <h2 class="page-heading">Reports</h2>
+            <p class="page-lead">Export visitor data for review.</p>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="reports-filter">
+            <div class="form-group">
+              <label>From Date</label>
+              <input type="date" id="rep-from" />
+            </div>
+            <div class="form-group">
+              <label>To Date</label>
+              <input type="date" id="rep-to" />
+            </div>
+            <div class="form-group">
+              <label>College</label>
+              <select id="rep-college">
+                <option value="">All Colleges</option>
+                <option>CICS</option><option>CEBA</option><option>CED</option>
+                <option>CEA</option><option>CHS</option><option>CLA</option>
+              </select>
+            </div>
+            <button class="btn-primary" onclick="loadReport()"><i class="fa-solid fa-filter"></i> Filter</button>
+          </div>
+          <div class="report-export-row">
+            <button class="btn-export" onclick="exportExcel()"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
+            <button class="btn-export" onclick="exportPDF()"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr>
+                <th>Date</th><th>Name</th><th>ID</th><th>College</th><th>Reason</th><th>Time In</th><th>Time Out</th><th>Duration</th>
+              </tr></thead>
+              <tbody id="report-body">
+                <tr><td colspan="8" class="empty-row">Apply filters to generate report.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ═══════════ MODAL: Add/Edit User ═══════════ -->
+  <div id="modal-user" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-user-title">Add User</h3>
+        <button class="modal-close" onclick="closeModal('modal-user')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modal-user-id" />
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="mu-name" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="mu-email" />
+        </div>
+        <div class="form-group">
+          <label>Student / Employee ID</label>
+          <input type="text" id="mu-student-id" />
+        </div>
+        <div class="form-group">
+          <label>College</label>
+          <select id="mu-college">
+            <option value="">— Select —</option>
+            <option>CICS</option><option>CEBA</option><option>CED</option>
+            <option>CEA</option><option>CHS</option><option>CLA</option>
+            <option>Administration</option><option>Library Staff</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="mu-role">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal('modal-user')">Cancel</button>
+        <button class="btn-primary" onclick="saveUser()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
