@@ -1,6 +1,4 @@
 <div align="center">
-  <img src="neu-logo.svg" width="100" alt="NEU Logo" />
-
   # NEU Library Visitor Log System
   ### New Era University — Library Department
 
