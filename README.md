@@ -1,7 +1,6 @@
 <div align="center">
   
-  # NEU Library Visitor Log System
-  ### New Era University — Library Department
+  # NEU Library Visitor Log 
 
   ![Status](https://img.shields.io/badge/status-live-brightgreen)
   ![Stack](https://img.shields.io/badge/stack-HTML%20%7C%20CSS%20%7C%20JS-gold)
