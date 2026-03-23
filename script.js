@@ -277,6 +277,51 @@ function enterAsRole(role) {
 }
 
 /* ══════════════════════════════════════════════════
+   ROLE SWITCH — secure, re-verified from DB
+══════════════════════════════════════════════════ */
+async function switchRole() {
+  if (!currentProfile || !currentUser) return;
+
+  const currentView = currentProfile._viewRole || currentProfile.role;
+  const targetView  = currentView === 'admin' ? 'user' : 'admin';
+
+  // If switching TO admin — re-verify role from DB first (security check)
+  if (targetView === 'admin') {
+    const { data, error } = await db
+      .from('profiles').select('role, is_blocked')
+      .eq('email', currentUser.email).maybeSingle();
+
+    if (error || !data) {
+      showToast('Could not verify your account. Please sign in again.', 'error');
+      logout(); return;
+    }
+    if (data.is_blocked) {
+      showToast('Your account has been blocked.', 'error');
+      logout(); return;
+    }
+    if (data.role !== 'admin') {
+      showToast('You do not have administrator access.', 'error');
+      // Strip any cached admin role — account was demoted
+      currentProfile.role      = data.role;
+      currentProfile._viewRole = 'user';
+      showApp(); return;
+    }
+    // Role confirmed in DB — safe to switch
+    currentProfile.role = data.role; // refresh from DB
+    await logActivity(currentUser.email, 'role-switch', `${currentProfile.name} switched to Admin View`);
+  } else {
+    await logActivity(currentUser.email, 'role-switch', `${currentProfile.name} switched to User View`);
+  }
+
+  currentProfile._viewRole = targetView;
+  showApp();
+  showToast(
+    targetView === 'admin' ? '🛡️ Switched to Admin View' : '👤 Switched to User View',
+    'success'
+  );
+}
+
+/* ══════════════════════════════════════════════════
    CHECK IN / CHECK OUT
 /* ══════════════════════════════════════════════════
    APP BOOTSTRAP
@@ -286,17 +331,48 @@ function showApp() {
   document.getElementById('app').classList.remove('hidden');
 
   const effectiveRole = currentProfile._viewRole || currentProfile.role;
+  const isActualAdmin = currentProfile.role === 'admin';
 
   // Populate sidebar
-  document.getElementById('sidebar-name').textContent  = currentProfile.name;
-  document.getElementById('sidebar-role').textContent  =
-    effectiveRole === 'admin' ? 'Administrator' : (currentProfile.employee_type || 'Student');
-  document.getElementById('sidebar-avatar').src        = currentProfile.picture || generateAvatar(currentProfile.name);
+  document.getElementById('sidebar-name').textContent = currentProfile.name;
+  document.getElementById('sidebar-role').textContent =
+    currentProfile.employee_type === 'Employee' ? 'Employee' : 'Student';
+  document.getElementById('sidebar-avatar').src = currentProfile.picture || generateAvatar(currentProfile.name);
 
-  // Show/hide navs based on role
+  // View chip — shows current active view for admin-role users
+  const chip      = document.getElementById('sidebar-view-chip');
+  const chipLabel = document.getElementById('sidebar-view-label');
+  if (isActualAdmin) {
+    chip.classList.remove('hidden');
+    chip.className = `sidebar-view-chip ${effectiveRole === 'admin' ? 'admin' : 'user'}`;
+    chipLabel.textContent = effectiveRole === 'admin' ? 'Admin View' : 'User View';
+  } else {
+    chip.classList.add('hidden');
+  }
+
+  // Switch role button — only shown to actual admins
+  const switchBtn   = document.getElementById('btn-switch-role');
+  const switchLabel = document.getElementById('switch-role-label');
+  const switchIcon  = document.getElementById('switch-role-icon');
+  if (isActualAdmin) {
+    switchBtn.classList.remove('hidden');
+    if (effectiveRole === 'admin') {
+      switchLabel.textContent = 'Switch to User View';
+      switchIcon.className    = 'fa-solid fa-user';
+      switchBtn.className     = 'btn-switch-role to-user';
+    } else {
+      switchLabel.textContent = 'Switch to Admin View';
+      switchIcon.className    = 'fa-solid fa-shield-halved';
+      switchBtn.className     = 'btn-switch-role to-admin';
+    }
+  } else {
+    switchBtn.classList.add('hidden');
+  }
+
+  // Show/hide navs based on effective role
   if (effectiveRole === 'admin') {
     document.getElementById('admin-nav').classList.remove('hidden');
-    document.getElementById('user-nav').classList.add('hidden');  // hide visitor nav for admins
+    document.getElementById('user-nav').classList.add('hidden');
   } else {
     document.getElementById('admin-nav').classList.add('hidden');
     document.getElementById('user-nav').classList.remove('hidden');
@@ -305,6 +381,7 @@ function showApp() {
   showWelcomeOverlay();
   navigate(effectiveRole === 'admin' ? 'admin-overview' : 'dashboard');
 
+  clearInterval(monitorInterval);
   monitorInterval = setInterval(refreshActiveCount, 30000);
   refreshActiveCount();
 }
