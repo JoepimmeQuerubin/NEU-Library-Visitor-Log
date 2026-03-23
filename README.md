@@ -11,7 +11,7 @@
 
   > A web-based system for tracking library visitors at NEU. Students can check in and out, while admins can monitor, manage, and generate reports.
 
-  **[🌐 Live Site](https://neulibraryvisitorlog.netlify.app/)** &nbsp;·&nbsp;
+  **[🌐 Live Site](https://neulibraryvisitorlog.netlify.app/)** &nbsp;
 </div>
 
 ---
@@ -53,10 +53,8 @@
 | 🎨 Frontend | HTML, CSS, Vanilla JavaScript |
 | 🗄️ Database | Supabase (PostgreSQL) |
 | 🔐 Auth | Google OAuth 2.0 |
-| 📊 Charts | Chart.js |
-| 📁 Export | SheetJS (Excel) + jsPDF (PDF) |
 | 🎭 Icons | Font Awesome 6 |
-| 🚀 Hosting | Netlify / Vercel |
+| 🚀 Hosting | Netlify |
 
 ---
 
@@ -68,7 +66,6 @@
 ├── 🎨 style.css           — Grand Library dark theme
 ├── ⚙️  script.js           — All logic and Supabase integration
 ├── 🖼️  neu-logo.svg        — NEU University seal
-├── 🌱 seed_data.sql        — Sample students + visit history
 ├── 🗄️  SUPABASE_SETUP.md   — Database setup instructions
 └── 📖 README.md            — This file
 ```
@@ -104,8 +101,6 @@ data-client_id="123456789-abc.apps.googleusercontent.com"
 ### 4️⃣ &nbsp; Deploy
 
 **Netlify** — drag your project folder to [netlify.com/drop](https://app.netlify.com/drop)
-
-**Vercel** — push to GitHub, then import at [vercel.com](https://vercel.com)
 
 ### 5️⃣ &nbsp; Create Your Admin Account
 
