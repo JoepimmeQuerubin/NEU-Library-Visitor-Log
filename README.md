@@ -11,7 +11,7 @@
 
   > A web-based system for tracking library visitors at NEU. Students can check in and out, while admins can monitor, manage, and generate reports.
 
-  **[🌐 Live Site](https://your-site-name.netlify.app)** &nbsp;·&nbsp; **[🗄️ Supabase Dashboard](https://supabase.com)**
+  **[🌐 Live Site](https://neulibraryvisitorlog.netlify.app/)** &nbsp;·&nbsp;
 </div>
 
 ---
